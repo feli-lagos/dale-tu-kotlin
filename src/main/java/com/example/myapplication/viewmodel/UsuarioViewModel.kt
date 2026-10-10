@@ -1,14 +1,22 @@
 package com.example.myapplication.viewmodel
 
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.myapplication.model.UsuarioErrores
 import com.example.myapplication.model.UsuarioUiState
+import com.example.myapplication.model.data.local.UsuarioDatabase
+import com.example.myapplication.model.data.local.UsuarioEntity
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 
-class UsuarioViewModel: ViewModel() {
+class UsuarioViewModel(app: Application) : AndroidViewModel(app) {
+
+    private val dao = UsuarioDatabase.getDatabase(app).usuarioDao()
 
     //Estado interno mutable
     private val _estado = MutableStateFlow(UsuarioUiState())
@@ -55,4 +63,22 @@ class UsuarioViewModel: ViewModel() {
 
         return !hayErrores
     }
+
+    // Agregar
+    // Guarda en Room
+    fun guardar(onListo: () -> Unit) {
+        val a = _estado.value
+        viewModelScope.launch {
+            dao.insertar(
+                UsuarioEntity(
+                    nombre = a.nombre,
+                    correo = a.correo,
+                    clave = a.clave,
+                    direccion = a.direccion
+                )
+            )
+            onListo()
+        }
+    }
+//Hasta aqui
 }
